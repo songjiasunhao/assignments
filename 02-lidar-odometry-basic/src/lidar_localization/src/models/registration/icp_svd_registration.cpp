@@ -90,7 +90,7 @@ bool ICPSVDRegistration::ScanMatch(
     int curr_iter = 0;
     while (curr_iter < max_iter_) {
         // TODO: apply current estimation:
-
+       
         // TODO: get correspondence:
 
         // TODO: do not have enough correspondence -- break:
@@ -133,7 +133,15 @@ void ICPSVDRegistration::GetTransform(
     const size_t N = xs.size();
 
     // TODO: find centroids of mu_x and mu_y:
-
+    std::vector<Eigen::Vector3f> mu_x_sum ;
+    std::vector<Eigen::Vector3f> mu_y_sum ;
+    std::vector<Eigen::Vector3f> mu_x;
+    std::vector<Eigen::Vector3f> mu_y;
+   for (size_t i = 0; i < N; i++)
+   {
+       
+   }
+   
     // TODO: build H:
 
     // TODO: solve R:
