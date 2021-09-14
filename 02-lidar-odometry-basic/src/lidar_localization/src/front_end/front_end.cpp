@@ -138,7 +138,7 @@ bool FrontEnd::Update(const CloudData& cloud_data, Eigen::Matrix4f& cloud_pose) 
         return true;
     }
 
-    // 不是第一帧，就正常匹配
+    // 不是第一帧，就正常匹配，注意source参数为当前点云，target为原始局部地图
     registration_ptr_->ScanMatch(filtered_cloud_ptr, predict_pose, result_cloud_ptr_, current_frame_.pose);
     cloud_pose = current_frame_.pose;
 

@@ -67,7 +67,7 @@ bool ICPSVDRegistration::SetInputTarget(const CloudData::CLOUD_PTR& input_target
 
     return true;
 }
-
+// 重载父类的虚函数，使用面向对象的三大特性之一的多态
 bool ICPSVDRegistration::ScanMatch(
     const CloudData::CLOUD_PTR& input_source, 
     const Eigen::Matrix4f& predict_pose, 
@@ -90,27 +90,38 @@ bool ICPSVDRegistration::ScanMatch(
     int curr_iter = 0;
     while (curr_iter < max_iter_) {
         // TODO: apply current estimation:
-       
+        Eigen::Matrix4f temp_transformation_ = Eigen::Matrix4f::Identity();
+        CloudData::CLOUD_PTR current_input_soucre(new CloudData::CLOUD());
+        pcl::transformPointCloud(*transformed_input_source, *current_input_soucre, transformation_);
+        //如果使用pcl::transformPointCloud(*transformed_input_source, *transformed_input_source, transformation_);轨迹会产生抖动，不知道原因
         // TODO: get correspondence:
-
+        std::vector<Eigen::Vector3f> xs;
+        std::vector<Eigen::Vector3f> ys;
+        size_t point_num = GetCorrespondence(current_input_soucre,xs,ys);
         // TODO: do not have enough correspondence -- break:
-
+        if (point_num<10)
+        break;
         // TODO: update current transform:
-
+        GetTransform(xs,ys,temp_transformation_);
         // TODO: whether the transformation update is significant:
-
+        if(IsSignificant(temp_transformation_,trans_eps_))
         // TODO: update transformation:
-
+        transformation_ =temp_transformation_*transformation_;//
         ++curr_iter;
     }
 
     // set output:
-    result_pose = transformation_ * predict_pose;
+    result_pose = transformation_ * predict_pose;//
+    //归一化
+    Eigen::Quaternionf q(result_pose.block<3,3>(0,0));
+    q.normalize();
+    result_pose.block<3,3>(0,0) = q.toRotationMatrix();
+    
     pcl::transformPointCloud(*input_source_, *result_cloud_ptr, result_pose);
     
     return true;
 }
-
+//公式中xs为target,ys为source
 size_t ICPSVDRegistration::GetCorrespondence(
     const CloudData::CLOUD_PTR &input_source, 
     std::vector<Eigen::Vector3f> &xs,
@@ -119,12 +130,24 @@ size_t ICPSVDRegistration::GetCorrespondence(
     const float MAX_CORR_DIST_SQR = max_corr_dist_ * max_corr_dist_;
 
     size_t num_corr = 0;
-
     // TODO: set up point correspondence
 
+    for (size_t i = 0; i < input_source->size(); i++)
+    {
+        std::vector<float> distance;
+        std::vector<int> index;
+        input_target_kdtree_->nearestKSearch(input_source->at(i),1,index,distance);//第一个参数为基准点，返回target的索引
+        if(distance[0]<MAX_CORR_DIST_SQR)
+        {
+            ys.push_back(Eigen::Vector3f(input_source->at(i).x,input_source->at(i).y,input_source->at(i).z));
+            xs.push_back(Eigen::Vector3f(input_target_->at(index[0]).x,input_target_->at(index[0]).y,input_target_->at(index[0]).z));
+            num_corr++;
+        }
+    }
+    //
     return num_corr;
 }
-
+//公式中xs为target,ys为source,所求R为s->t,source为当前帧，target为局部地图点云
 void ICPSVDRegistration::GetTransform(
     const std::vector<Eigen::Vector3f> &xs,
     const std::vector<Eigen::Vector3f> &ys,
@@ -133,22 +156,41 @@ void ICPSVDRegistration::GetTransform(
     const size_t N = xs.size();
 
     // TODO: find centroids of mu_x and mu_y:
-    std::vector<Eigen::Vector3f> mu_x_sum ;
-    std::vector<Eigen::Vector3f> mu_y_sum ;
-    std::vector<Eigen::Vector3f> mu_x;
-    std::vector<Eigen::Vector3f> mu_y;
+
+    Eigen::Vector3f mu_x = Eigen::Vector3f::Zero();
+    Eigen::Vector3f mu_y = Eigen::Vector3f::Zero();
+    std::vector<Eigen::Vector3f> x_h ;
+    std::vector<Eigen::Vector3f> y_h ;
    for (size_t i = 0; i < N; i++)
    {
-       
+       mu_x +=xs[i];
+       mu_y +=ys[i];
    }
-   
+   mu_x = mu_x/N;
+   mu_y = mu_y/N;
     // TODO: build H:
-
+    Eigen::Matrix3f H = Eigen::Matrix3f::Zero();
+    for (size_t i = 0; i < N; i++)
+    {
+        x_h.push_back(xs[i]-mu_x);
+        y_h.push_back(ys[i]-mu_y);
+    }
+       for (size_t i = 0; i < N; i++)
+    {
+        H+=y_h[i]*x_h[i].transpose();//y->x
+    }
     // TODO: solve R:
+    Eigen::JacobiSVD<Eigen::Matrix3f> svd(H, Eigen::ComputeFullU|Eigen::ComputeFullV);
+    Eigen::Matrix3f U = svd.matrixU();
+    Eigen::Matrix3f V = svd.matrixV();
 
+    Eigen::Matrix3f R =V*(U.transpose());
     // TODO: solve t:
-
+    Eigen::Vector3f t= mu_x - R*mu_y;
     // TODO: set output:
+    //transformation_ <<R,t,0,0,0,1;
+    transformation_.block<3,3>(0,0) = R;
+    transformation_.block<3,1>(0,3) = t;
 }
 
 bool ICPSVDRegistration::IsSignificant(
