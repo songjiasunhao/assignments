@@ -286,8 +286,8 @@ int main(int argc, char **argv)
                     //ceres::LossFunction *loss_function = NULL;
                     ceres::LossFunction *loss_function = new ceres::HuberLoss(0.1);
                     ceres::LocalParameterization *q_parameterization =
-                     //   new ceres::EigenQuaternionParameterization();
-                     new PoseSO3Para();
+                     new ceres::EigenQuaternionParameterization();
+                    // new PoseSO3Para();
                     ceres::Problem::Options problem_options;
 
                     ceres::Problem problem(problem_options);
@@ -381,8 +381,8 @@ int main(int argc, char **argv)
                                 s = (cornerPointsSharp->points[i].intensity - int(cornerPointsSharp->points[i].intensity)) / SCAN_PERIOD;
                             else
                                 s = 1.0;
-                           // ceres::CostFunction *cost_function = LidarEdgeFactor::Create(curr_point, last_point_a, last_point_b, s);
-                            ceres::CostFunction *cost_function = new LidarEdgeJFactor(curr_point,last_point_a,last_point_b);//改用解析求导
+                           ceres::CostFunction *cost_function = LidarEdgeFactor::Create(curr_point, last_point_a, last_point_b, s);
+                           // ceres::CostFunction *cost_function = new LidarEdgeJFactor(curr_point,last_point_a,last_point_b,s);//改用解析求导
                             problem.AddResidualBlock(cost_function, loss_function, para_q, para_t);
                             corner_correspondence++;
                         }
@@ -480,8 +480,8 @@ int main(int argc, char **argv)
                                     s = (surfPointsFlat->points[i].intensity - int(surfPointsFlat->points[i].intensity)) / SCAN_PERIOD;
                                 else
                                     s = 1.0;
-                                //ceres::CostFunction *cost_function = LidarPlaneFactor::Create(curr_point, last_point_a, last_point_b, last_point_c, s);
-                                ceres::CostFunction *cost_function = new LidarPlaneJFactor(curr_point,last_point_a,last_point_b,last_point_c);//改用解析求导
+                                ceres::CostFunction *cost_function = LidarPlaneFactor::Create(curr_point, last_point_a, last_point_b, last_point_c, s);
+                               // ceres::CostFunction *cost_function = new LidarPlaneJFactor(curr_point,last_point_a,last_point_b,last_point_c,s);//改用解析求导
                                 problem.AddResidualBlock(cost_function, loss_function, para_q, para_t);
                                 plane_correspondence++;
                             }
@@ -608,38 +608,3 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
 }
 
-Eigen::Matrix<double,3,3> skew(Eigen::Matrix<double,3,1>& mat_in){
-    Eigen::Matrix<double,3,3> skew_mat;
-    skew_mat.setZero();
-    skew_mat(0,1) = -mat_in(2);
-    skew_mat(0,2) =  mat_in(1);
-    skew_mat(1,2) = -mat_in(0);
-    skew_mat(1,0) =  mat_in(2);
-    skew_mat(2,0) = -mat_in(1);
-    skew_mat(2,1) =  mat_in(0);
-    return skew_mat;
-}
-
-void getTransformFromSo3( const Eigen::Matrix<double ,3,1>& so3, Eigen::Quaterniond& q){
-    Eigen::Vector3d omega(so3.data());
-    Eigen::Matrix3d Omega = skew(omega);
-
-    double theta = omega.norm();
-    double half_theta = 0.5*theta;
-
-    double imag_factor;
-    double real_factor = cos(half_theta);
-    if(theta<1e-10)
-    {
-        double theta_sq = theta*theta;
-        double theta_po4 = theta_sq*theta_sq;
-        imag_factor = 0.5-0.0208333*theta_sq+0.000260417*theta_po4;
-    }
-    else
-    {
-        double sin_half_theta = sin(half_theta);
-        imag_factor = sin_half_theta/theta;
-    }
-
-    q = Eigen::Quaterniond(real_factor, imag_factor*omega.x(), imag_factor*omega.y(), imag_factor*omega.z());
-}

@@ -23,8 +23,6 @@
 
 Eigen::Matrix<double,3,3> skew(Eigen::Matrix<double,3,1>& mat_in);
 
-void getTransformFromSo3( const Eigen::Matrix<double ,3,1>& so3, Eigen::Quaterniond& q);
-
 struct LidarEdgeFactor
 {
 	LidarEdgeFactor(Eigen::Vector3d curr_point_, Eigen::Vector3d last_point_a_,
@@ -121,8 +119,8 @@ struct LidarPlaneFactor
 
 class LidarEdgeJFactor : public ceres::SizedCostFunction<1,4,3>{
 	public:
-	 	LidarEdgeJFactor(Eigen::Vector3d curr_point_, Eigen::Vector3d last_point_a_,Eigen::Vector3d last_point_b_)
-		 :curr_point(curr_point_),last_point_a(last_point_a_),last_point_b(last_point_b_){}
+	 	LidarEdgeJFactor(Eigen::Vector3d curr_point_, Eigen::Vector3d last_point_a_,Eigen::Vector3d last_point_b_ ,double s_)
+		 :curr_point(curr_point_),last_point_a(last_point_a_),last_point_b(last_point_b_),s(s_){}
 		  
 		  virtual ~LidarEdgeJFactor(){}
 		  virtual bool Evaluate(double const *const* parameters, double *residuals, double **jacobians)const{
@@ -160,6 +158,7 @@ class LidarEdgeJFactor : public ceres::SizedCostFunction<1,4,3>{
 		Eigen::Vector3d curr_point;
 		Eigen::Vector3d last_point_a;
 		Eigen::Vector3d last_point_b;
+		double s;
  };
 
 class LidarPlaneJFactor : public ceres::SizedCostFunction<1,4,3>{
@@ -168,8 +167,8 @@ class LidarPlaneJFactor : public ceres::SizedCostFunction<1,4,3>{
 			double s;
 
 			LidarPlaneJFactor(Eigen::Vector3d curr_point_, Eigen::Vector3d last_point_j_,
-								Eigen::Vector3d last_point_l_, Eigen::Vector3d last_point_m_)
-			: curr_point(curr_point_), last_point_j(last_point_j_), last_point_l(last_point_l_), last_point_m(last_point_m_) {}
+								Eigen::Vector3d last_point_l_, Eigen::Vector3d last_point_m_,double s_)
+			: curr_point(curr_point_), last_point_j(last_point_j_), last_point_l(last_point_l_), last_point_m(last_point_m_),s(s_) {}
 
 		virtual ~LidarPlaneJFactor(){}
 		  virtual bool Evaluate(double const *const* parameters, double *residuals, double **jacobians)const{
@@ -285,10 +284,14 @@ class PoseSO3Para:public ceres::LocalParameterization{
 		virtual ~PoseSO3Para(){}
 
 		virtual bool Plus(const double* x, const double* delta, double* x_plus_delta) const{
-		Eigen::Quaterniond delta_q;
-		getTransformFromSo3(Eigen::Map<const Eigen::Matrix<double,3,1>>(delta), delta_q);//将矩阵转化为四元数，还未写
 		
 		Eigen::Map<const Eigen::Quaterniond> quater(x);
+		
+		Eigen::Quaterniond delta_q;
+		//getTransformFromSo3(Eigen::Map<const Eigen::Matrix<double,3,1>>(delta), delta_q);//将矩阵转化为四元数，还未写
+		Eigen::Map<const Eigen::Vector3d> delta_so3(delta);
+		delta_q = Sophus::SO3d::exp(delta_so3).unit_quaternion();
+
 		Eigen::Map<Eigen::Quaterniond> quater_plus(x_plus_delta);
 
 		quater_plus = delta_q*quater;

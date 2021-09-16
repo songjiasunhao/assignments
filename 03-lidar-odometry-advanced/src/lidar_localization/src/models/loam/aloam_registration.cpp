@@ -12,6 +12,19 @@
 
 #include "lidar_localization/models/loam/aloam_registration.hpp"
 
+Eigen::Matrix<double,3,3> skew(Eigen::Matrix<double,3,1>& mat_in){
+    Eigen::Matrix<double,3,3> skew_mat;
+    skew_mat.setZero();
+    skew_mat(0,1) = -mat_in(2);
+    skew_mat(0,2) =  mat_in(1);
+    skew_mat(1,2) = -mat_in(0);
+    skew_mat(1,0) =  mat_in(2);
+    skew_mat(2,0) = -mat_in(1);
+    skew_mat(2,1) =  mat_in(0);
+    return skew_mat;
+}
+
+
 namespace lidar_localization {
 
 CeresALOAMRegistration::CeresALOAMRegistration(const Eigen::Quaternionf &dq, const Eigen::Vector3f &dt) {   
@@ -19,7 +32,8 @@ CeresALOAMRegistration::CeresALOAMRegistration(const Eigen::Quaternionf &dq, con
     // config optimizer:
     // 
     // 1. parameterization:
-    config_.q_parameterization_ptr = new ceres::EigenQuaternionParameterization();
+    //config_.q_parameterization_ptr = new ceres::EigenQuaternionParameterization();
+    config_.q_parameterization_ptr = new PoseSO3Para();//自定义参数块
     // 2. loss function:
     // TODO: move param to config
     config_.loss_function_ptr =  new ceres::HuberLoss(0.10);
@@ -59,11 +73,16 @@ bool CeresALOAMRegistration::AddEdgeFactor(
     const Eigen::Vector3d &target_x, const Eigen::Vector3d &target_y,
     const double &ratio
 ) {
-    ceres::CostFunction *factor_edge = LidarEdgeFactor::Create(
+    /*ceres::CostFunction *factor_edge = LidarEdgeFactor::Create(
         source, 
         target_x, target_y, 
         ratio
-    );
+    );*/
+    ceres::CostFunction *factor_edge = new LidarEdgeJFactor(
+        source, 
+        target_x, target_y,
+        ratio
+    );//自己的解析求导
     
     problem_.AddResidualBlock(
         factor_edge, 
@@ -88,11 +107,16 @@ bool CeresALOAMRegistration::AddPlaneFactor(
     const Eigen::Vector3d &target_x, const Eigen::Vector3d &target_y, const Eigen::Vector3d &target_z,
     const double &ratio
 ) {
-    ceres::CostFunction *factor_plane = LidarPlaneFactor::Create(
+    /*ceres::CostFunction *factor_plane = LidarPlaneFactor::Create(
         source, 
         target_x, target_y, target_z, 
         ratio
-    );
+    );*/
+    ceres::CostFunction *factor_plane = new LidarPlaneJFactor(
+        source, 
+        target_x, target_y,target_z,
+        ratio
+    );//自定义的面特征解析求导
 
     problem_.AddResidualBlock(
         factor_plane,
