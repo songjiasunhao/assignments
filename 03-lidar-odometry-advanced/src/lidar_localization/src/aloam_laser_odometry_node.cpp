@@ -286,7 +286,8 @@ int main(int argc, char **argv)
                     //ceres::LossFunction *loss_function = NULL;
                     ceres::LossFunction *loss_function = new ceres::HuberLoss(0.1);
                     ceres::LocalParameterization *q_parameterization =
-                        new ceres::EigenQuaternionParameterization();
+                     //   new ceres::EigenQuaternionParameterization();
+                     new PoseSO3Para();
                     ceres::Problem::Options problem_options;
 
                     ceres::Problem problem(problem_options);
@@ -617,4 +618,28 @@ Eigen::Matrix<double,3,3> skew(Eigen::Matrix<double,3,1>& mat_in){
     skew_mat(2,0) = -mat_in(1);
     skew_mat(2,1) =  mat_in(0);
     return skew_mat;
+}
+
+void getTransformFromSo3( const Eigen::Matrix<double ,3,1>& so3, Eigen::Quaterniond& q){
+    Eigen::Vector3d omega(so3.data());
+    Eigen::Matrix3d Omega = skew(omega);
+
+    double theta = omega.norm();
+    double half_theta = 0.5*theta;
+
+    double imag_factor;
+    double real_factor = cos(half_theta);
+    if(theta<1e-10)
+    {
+        double theta_sq = theta*theta;
+        double theta_po4 = theta_sq*theta_sq;
+        imag_factor = 0.5-0.0208333*theta_sq+0.000260417*theta_po4;
+    }
+    else
+    {
+        double sin_half_theta = sin(half_theta);
+        imag_factor = sin_half_theta/theta;
+    }
+
+    q = Eigen::Quaterniond(real_factor, imag_factor*omega.x(), imag_factor*omega.y(), imag_factor*omega.z());
 }

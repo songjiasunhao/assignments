@@ -19,8 +19,11 @@
 #include <pcl/point_types.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <math.h>
 
 Eigen::Matrix<double,3,3> skew(Eigen::Matrix<double,3,1>& mat_in);
+
+void getTransformFromSo3( const Eigen::Matrix<double ,3,1>& so3, Eigen::Quaterniond& q);
 
 struct LidarEdgeFactor
 {
@@ -274,3 +277,34 @@ struct LidarDistanceFactor
 	Eigen::Vector3d curr_point;
 	Eigen::Vector3d closed_point;
 };
+
+class PoseSO3Para:public ceres::LocalParameterization{
+	public:
+
+		PoseSO3Para(){}
+		virtual ~PoseSO3Para(){}
+
+		virtual bool Plus(const double* x, const double* delta, double* x_plus_delta) const{
+		Eigen::Quaterniond delta_q;
+		getTransformFromSo3(Eigen::Map<const Eigen::Matrix<double,3,1>>(delta), delta_q);//将矩阵转化为四元数，还未写
+		
+		Eigen::Map<const Eigen::Quaterniond> quater(x);
+		Eigen::Map<Eigen::Quaterniond> quater_plus(x_plus_delta);
+
+		quater_plus = delta_q*quater;
+
+		return true;
+
+		}
+		virtual bool ComputeJacobian(const double *x, double* jacobian) const
+		{
+			Eigen::Map<Eigen::Matrix<double, 4,3,Eigen::RowMajor>> j(jacobian);
+			(j.topRows(3)).setIdentity();//按行分块，前3行
+			(j.bottomRows(1)).setZero();
+
+			return true;
+		}
+		virtual int GlobalSize() const {return 4;}
+		virtual int LocalSize() const {return 3;}
+};
+
