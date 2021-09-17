@@ -109,3 +109,34 @@ DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '5
 DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STOPPING', 'processname': 'lxsession', 'pid': '119', 'groupname': 'lxsession'}
 DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '58', 'len': '57', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_STOPPING', 'serial': '58', 'pool': 'inorder'}
 DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'RUNNING', 'processname': 'xvfb', 'pid': '96', 'groupname': 'xvfb'}
+INFO:ordered_startup_supervisord.main:programs in order: 
+INFO:ordered_startup_supervisord.main:xvfb
+INFO:ordered_startup_supervisord.main:lxsession
+INFO:ordered_startup_supervisord.main:lxpanel
+INFO:ordered_startup_supervisord.main:pcmanfm
+INFO:ordered_startup_supervisord.main:x11vnc
+INFO:ordered_startup_supervisord.main:novnc
+INFO:ordered_startup_supervisord.main:uwsgi
+INFO:ordered_startup_supervisord.main:nginx
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '1', 'len': '58', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_STARTING', 'serial': '1', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STOPPED', 'processname': 'xvfb', 'tries': '0', 'groupname': 'xvfb'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '8', 'len': '60', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_STARTING', 'serial': '8', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STOPPED', 'processname': 'uwsgi', 'tries': '0', 'groupname': 'uwsgi'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '9', 'len': '60', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_STOPPING', 'serial': '9', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'uwsgi', 'pid': '26', 'groupname': 'uwsgi'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '10', 'len': '64', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_RUNNING', 'serial': '10', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'inorder', 'pid': '18', 'groupname': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '11', 'len': '58', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_RUNNING', 'serial': '11', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'xvfb', 'pid': '19', 'groupname': 'xvfb'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '12', 'len': '68', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_RUNNING', 'serial': '12', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'lxsession', 'pid': '20', 'groupname': 'lxsession'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '13', 'len': '64', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_RUNNING', 'serial': '13', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'pcmanfm', 'pid': '21', 'groupname': 'pcmanfm'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '14', 'len': '64', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_RUNNING', 'serial': '14', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'lxpanel', 'pid': '22', 'groupname': 'lxpanel'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '15', 'len': '62', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_RUNNING', 'serial': '15', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'x11vnc', 'pid': '23', 'groupname': 'x11vnc'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '16', 'len': '60', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_RUNNING', 'serial': '16', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'novnc', 'pid': '24', 'groupname': 'novnc'}
+DEBUG:ordered_startup_supervisord.main:headers = {'ver': '3.0', 'poolserial': '17', 'len': '60', 'server': 'supervisor', 'eventname': 'PROCESS_STATE_RUNNING', 'serial': '17', 'pool': 'inorder'}
+DEBUG:ordered_startup_supervisord.main:payload = {'from_state': 'STARTING', 'processname': 'nginx', 'pid': '25', 'groupname': 'nginx'}
