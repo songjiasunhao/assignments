@@ -112,6 +112,100 @@ template <typename _T1> struct MultiPosAccResidual
   const Eigen::Matrix< _T1, 3 , 1> sample_;
 };
 
+//解析求导
+template <typename _T1> class MultiPosAccResidual_ANY:public ceres::SizedCostFunction<1,9>
+{
+public:
+
+  const _T1 g_mag_;
+  const Eigen::Matrix<_T1,3,1> sample_;
+
+  MultiPosAccResidual_ANY(const _T1 &g_mag, 
+    const Eigen::Matrix< _T1, 3 , 1> &sample 
+  ) : g_mag_(g_mag), sample_(sample){}
+
+  virtual bool Evaluate(double const *const * parameters, double *residuals, double **jacobians)const{
+    //数据，A
+    Eigen::Matrix<double,3,1> raw_samp(
+      double(sample_(0)),
+      double(sample_(1)),
+      double (sample_(2))
+    );
+//参数
+    CalibratedTriad_<double> calib_triad( 
+      //
+      // TODO: implement lower triad model here
+      //
+      // mis_yz, mis_zy, mis_zx:
+      double(0), double(0), double(0),
+      // mis_xz, mis_xy, mis_yx:
+      parameters[0][0], parameters[0][1], parameters[0][2],//注意使用双维
+      //    s_x,    s_y,    s_z:
+      parameters[0][3], parameters[0][4], parameters[0][5], 
+      //    b_x,    b_y,    b_z: 
+      parameters[0][6], parameters[0][7], parameters[0][8] 
+    );
+//求a
+Eigen::Matrix<double,3,1> calib_samp = calib_triad.unbiasNormalize(raw_samp);
+
+//残差函数
+residuals[0] = g_mag_*g_mag_ -calib_samp.transpose()*calib_samp;
+//输入雅可比
+if (jacobians!= NULL)
+{
+  if (jacobians[0]!=NULL)
+  {
+     /* Apply undistortion transform to accel measurements
+         mis_mat_ <<  _T(1)   , -mis_yz  ,  mis_zy  ,
+                       mis_xz ,  _T(1)   , -mis_zx  ,  
+                      -mis_xy ,  mis_yx  ,  _T(1)   ;*/
+    double Tayx = parameters[0][0];//此处代码符号不和课件对应，和论文对应，所以雅可比矩阵计算也应该变化
+    double Tazx = parameters[0][1];//
+    double Tazy = parameters[0][2];
+
+    double Kax_ = parameters[0][3];//注意此时程序里的s_x，不是倒数，ceres程序只求s_x,不求Kax，此时需要按x求导计算
+    double Kay_ = parameters[0][4];
+    double Kaz_ = parameters[0][5];
+
+    double bx = parameters[0][6];
+    double by = parameters[0][7];
+    double bz = parameters[0][8];
+
+    double Ax = sample_(0);
+    double Ay = sample_(1);
+    double Az = sample_(2);
+
+    /*
+    a<<
+    Kax_*(Ax - bx),
+    -Sayx*Kax_(Ax -bx)+Kay_(Ay - by),
+    -Sazx*Kax_*(Ax - bx)-Sazy*(Ay- by)+Kaz_*(Az-bz);*/
+
+    Eigen::Matrix<double,9,3> H;
+    H<< 0 , Kax_*(Ax-bx),0,
+              0,0,-Kax_*(Ax-bx),
+              0,0,Kay_*(Ay-by),
+              (Ax-bx),Tayx*(Ax-bx),-Tazx*(Ax -bx),
+              0,(Ay -by),Tazy*(Ay-by),
+              0,0,(Az-bz),
+              -Kax_,-Tayx*Kax_,Tazx*Kax_,
+              0,-Kay_,-Tazy*Kay_,
+              0,0,-Kaz_;
+
+  Eigen::Map<Eigen::Matrix<double,1,9,Eigen::RowMajor>> J(jacobians[0]);
+  J.setZero();
+
+  J = -2*calib_samp.transpose()*H.transpose();
+
+  }
+}
+  return true;
+  }
+
+};
+
+
+
 template <typename _T1> struct MultiPosGyroResidual
 {
   MultiPosGyroResidual( const Eigen::Matrix< _T1, 3 , 1> &g_versor_pos0, 
@@ -257,9 +351,8 @@ bool MultiPosCalibration_<_T>::calibrateAcc(
     ceres::Problem problem;
     for( int i = 0; i < static_samples.size(); i++)
     {
-      ceres::CostFunction* cost_function = MultiPosAccResidual<_T>::Create ( 
-        g_mag_, static_samples[i].data() 
-      );
+      //ceres::CostFunction* cost_function = MultiPosAccResidual<_T>::Create ( g_mag_, static_samples[i].data() );
+      ceres::CostFunction* cost_function = new MultiPosAccResidual_ANY<_T>(g_mag_, static_samples[i].data());
 
       problem.AddResidualBlock ( 
         cost_function,           /* error fuction */
