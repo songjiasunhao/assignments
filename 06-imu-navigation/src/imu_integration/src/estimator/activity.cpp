@@ -126,15 +126,36 @@ bool Activity::UpdatePose(void) {
         // TODO: implement your estimation here
         //
         // get deltas:
-
+        Eigen::Vector3d angular_delta;
+        Eigen::Vector3d  velocity_delta;
+        Eigen::Matrix3d R_curr;
+        Eigen::Matrix3d R_prev;
+        double delta_t =0;
         // update orientation:
-
+         if (GetAngularDelta(1,0, angular_delta))//处理序列中front，也就是最先进入的数据
+            {
+                UpdateOrientation(angular_delta,R_curr,R_prev);
+            }
+        else{
+            std::cout<<"flase :unable get angular Delta"<<std::endl;
+            return false;
+        }
         // get velocity delta:
-
+            if (GetVelocityDelta(1,0,R_curr,R_prev,delta_t,velocity_delta))
+            {
+                UpdatePosition(delta_t, velocity_delta);
+            }
+            else
+            {
+                std::cout<<"false:unable get velocity delta"<<std::endl;
+            }
+            
         // update position:
 
         // move forward -- 
         // NOTE: this is NOT fixed. you should update your buffer according to the method of your choice:
+
+
         imu_data_buff_.pop_front();
     }
     
@@ -223,7 +244,8 @@ bool Activity::GetAngularDelta(
     Eigen::Vector3d angular_vel_curr = GetUnbiasedAngularVel(imu_data_curr.angular_velocity);
     Eigen::Vector3d angular_vel_prev = GetUnbiasedAngularVel(imu_data_prev.angular_velocity);
 
-    angular_delta = 0.5*delta_t*(angular_vel_curr + angular_vel_prev);
+    angular_delta = 0.5*delta_t*(angular_vel_curr + angular_vel_prev);//中值法
+    //angular_delta = delta_t*angular_vel_prev;//欧拉法
 
     return true;
 }
@@ -260,7 +282,8 @@ bool Activity::GetVelocityDelta(
     Eigen::Vector3d linear_acc_curr = GetUnbiasedLinearAcc(imu_data_curr.linear_acceleration, R_curr);
     Eigen::Vector3d linear_acc_prev = GetUnbiasedLinearAcc(imu_data_prev.linear_acceleration, R_prev);
     
-    velocity_delta = 0.5*delta_t*(linear_acc_curr + linear_acc_prev);
+    velocity_delta = 0.5*delta_t*(linear_acc_curr + linear_acc_prev);//中值法
+    //velocity_delta = delta_t*linear_acc_prev;//欧拉法
 
     return true;
 }

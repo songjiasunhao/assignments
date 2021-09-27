@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/sunhao/catkin_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/sunhao/catkin_ws/src/Multisensor_fusion/lidar_localization/include/**",
+        "/home/sunhao/catkin_ws/src/lslidar_c16/lslidar_c16_decoder/include/**",
+        "/home/sunhao/catkin_ws/src/lslidar_c16/lslidar_c16_driver/include/**",
+        "/home/sunhao/catkin_ws/src/multi_lidar_calibration/src/include/**",
+        "/home/sunhao/catkin_ws/src/vlp16_ws/src/velodyne/velodyne_driver/include/**",
+        "/home/sunhao/catkin_ws/src/vlp16_ws/src/velodyne/velodyne_laserscan/include/**",
+        "/home/sunhao/catkin_ws/src/vlp16_ws/src/velodyne/velodyne_pointcloud/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}
