@@ -1,13 +1,13 @@
 <launch>
     <node pkg="tf" type="static_transform_publisher" name="ENU_broadcaster" args="0 0 0 0 0 0 inertial ENU 200" />
     
-<!--<node pkg="imu_integration" type="generator_node" name="imu_integration_generator_node" clear_params="true">-->
+<node pkg="imu_integration" type="generator_node" name="imu_integration_generator_node" clear_params="true">
         <!-- load default params -->
-       <!-- <rosparam command="load" file="$(find imu_integration)/config/generator.yaml" />-->
+       <rosparam command="load" file="$(find imu_integration)/config/generator.yaml" />
 
         <!-- custom configuration -->
-    <!--</node> -->
-    <param name="/use_sim_time" value="true" />
+    </node> 
+
     <node pkg="imu_integration" type="estimator_node" name="imu_integration_estimator_node" clear_params="true">
         <!-- load default params -->
         <rosparam command="load" file="$(find imu_integration)/config/generator.yaml" />
