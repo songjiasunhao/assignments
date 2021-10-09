@@ -198,7 +198,7 @@ private:
    * @return void
    */
   void SetProcessEquation(const Eigen::Matrix3d &C_nb,
-                          const Eigen::Vector3d &f_n,
+                          const Eigen::Vector3d &f_b,
                           const Eigen::Vector3d &w_n);
   /**
    * @brief  update process equation
