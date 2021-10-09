@@ -25,7 +25,7 @@ Activity::Activity(void)
 
 void Activity::Init(void) {
     // parse IMU config:
-    private_nh_.param("imu/topic_name", imu_config_.topic_name, std::string("/sim/sensor/imu"));
+  private_nh_.param("imu/topic_name", imu_config_.topic_name, std::string("/sim/sensor/imu"));
     imu_sub_ptr_ = std::make_shared<IMUSubscriber>(private_nh_, imu_config_.topic_name, 1000000);
 
     // a. gravity constant:
