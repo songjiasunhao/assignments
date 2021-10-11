@@ -435,7 +435,8 @@ bool ErrorStateKalmanFilter::GetVelocityDelta(
   linear_acc_prev = GetUnbiasedLinearAcc(linear_acc_prev, R_prev);
 
   // mid-value acc can improve error state prediction accuracy:
-  linear_acc_mid = 0.5 * (linear_acc_curr + linear_acc_prev);
+  //linear_acc_mid = 0.5 * (linear_acc_curr + linear_acc_prev);
+  linear_acc_mid =  (linear_acc_curr + linear_acc_prev)/2-accl_bias_;
   velocity_delta = T * linear_acc_mid;
 
   return true;
@@ -496,7 +497,7 @@ F_.block<3,3>(kIndexErrorPos,kIndexErrorVel) = Eigen::Matrix3d::Identity();//前
 F_.block<3,3>(kIndexErrorVel,kIndexErrorOri) = -C_nb*Sophus::SO3d::hat(f_b).matrix();//反对称
 F_.block<3,3>(kIndexErrorVel,kIndexErrorAccel) = -C_nb;
 F_.block<3,3>(kIndexErrorOri,kIndexErrorOri) = -Sophus::SO3d::hat(w_b).matrix();
-F_.block<3,3>(kIndexErrorOri,kIndexErrorGyro) = Eigen::Matrix3d::Identity();
+F_.block<3,3>(kIndexErrorOri,kIndexErrorGyro) = -Eigen::Matrix3d::Identity();
   // b. set process equation for delta ori:
   B_.setZero();
   B_.block<3,3>(kIndexErrorVel, kIndexNoiseAccel) = C_nb;
