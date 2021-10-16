@@ -64,7 +64,7 @@ rosbag play kitti_lidar_only_2011_10_03_drive_0027_synced.bag
 请搜索TODO, 开始你的编码 :P. 此处将完成作业相关的配置汇总如下. 所有的改动仅需在如下三个文件中进行:
 
 * **Hyper Params** [here](src/lidar_localization/config/filtering/kitti_filtering.yaml#L109)
-    
+  
     * 地图以及Scan Context Data输入路径
     
     * ESKF / IEKF参数配置
