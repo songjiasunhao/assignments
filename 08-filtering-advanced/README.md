@@ -171,3 +171,9 @@ rosbag play virtual_proving_ground.bag
 * **红色**轨迹为融合后的估计值
 
 <img src="doc/images/gnss-ins-sim-demo.png" alt="Demo, GNSS-INS-Sim Estimation" width="100%">
+
+出现的为问题：
+
+1.编译不通过：需要将scan_context_manager中的文件替换为第四章的文件，去掉重名的hpp部分
+
+cpp文件也需要替换，替换后出现坐标不移动的问题。
