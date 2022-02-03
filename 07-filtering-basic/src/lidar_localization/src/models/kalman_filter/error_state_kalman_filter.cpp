@@ -12,6 +12,7 @@
 #include <ostream>
 
 // use sophus to handle so3 hat & SO3 log operations:
+//此文件运行流程在kitti_filtering_flow.cpp和kitti_filtering.cpp中，继承kalman
 #include <sophus/so3.hpp>
 
 #include "lidar_localization/models/kalman_filter/error_state_kalman_filter.hpp"
@@ -106,7 +107,7 @@ ErrorStateKalmanFilter::ErrorStateKalmanFilter(const YAML::Node &node) {
   CPose_.block<3, 3>(0, 0) = Eigen::Matrix3d::Identity();
   CPose_.block<3, 3>(3, 3) = Eigen::Matrix3d::Identity();
 
-  // init soms:
+  // init soms:Q
   QPose_.block<kDimMeasurementPose, kDimState>(0, 0) = GPose_;
 }
 
@@ -380,8 +381,8 @@ void ErrorStateKalmanFilter::UpdateOrientation(
     const Eigen::Vector3d &angular_delta, Eigen::Matrix3d &R_curr,
     Eigen::Matrix3d &R_prev) {
   // magnitude:
-  double angular_delta_mag = angular_delta.norm();
-  // direction:
+  double angular_delta_mag = angular_delta.norm();//求模，表示转角
+  // direction:归一化，单位方向
   Eigen::Vector3d angular_delta_dir = angular_delta.normalized();
 
   // build delta q:
@@ -436,7 +437,7 @@ bool ErrorStateKalmanFilter::GetVelocityDelta(
 
   // mid-value acc can improve error state prediction accuracy:
   //linear_acc_mid = 0.5 * (linear_acc_curr + linear_acc_prev);
-  linear_acc_mid =  (linear_acc_curr + linear_acc_prev)/2-accl_bias_;
+  linear_acc_mid =  (linear_acc_curr + linear_acc_prev)/2-accl_bias_;//？？？为什么又减去一次
   velocity_delta = T * linear_acc_mid;
 
   return true;
@@ -563,7 +564,7 @@ void ErrorStateKalmanFilter::CorrectErrorEstimationPose(
   //
   Eigen::Vector3d dp = pose_.block<3,1>(0,3) - T_nb.block<3,1>(0,3);
   Eigen::Matrix3d dR = T_nb.block<3,3>(0,0).transpose()*pose_.block<3,3>(0,0);
-  Eigen::Vector3d dtheta = Sophus::SO3d::vee(dR - Eigen::Matrix3d::Identity());//vee将反对称变为向量
+  Eigen::Vector3d dtheta = Sophus::SO3d::vee(dR - Eigen::Matrix3d::Identity());//vee将反对称变为向量???
   
   YPose_.block<3,1>(0,0) = dp;
   YPose_.block<3,1>(3,0) = dtheta;
@@ -648,7 +649,7 @@ void ErrorStateKalmanFilter::EliminateError(void) {
    
 }
 
-/**
+/**之后都不属于ESKF
  * @brief  is covariance stable
  * @param  INDEX_OFSET, state index offset
  * @param  THRESH, covariance threshold, defaults to 1.0e-5
