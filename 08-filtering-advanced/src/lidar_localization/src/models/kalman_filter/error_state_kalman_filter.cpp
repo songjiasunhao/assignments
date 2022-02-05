@@ -661,12 +661,22 @@ void ErrorStateKalmanFilter::CorrectErrorEstimationPoseVel(
 void ErrorStateKalmanFilter::CorrectErrorEstimationPosiVel(
     const Eigen::Matrix4d &T_nb, const Eigen::Vector3d &v_b, const Eigen::Vector3d &w_b,
     Eigen::VectorXd &Y, Eigen::MatrixXd &G, Eigen::MatrixXd &K
-) {
+) {//此函数是gps和编码器融合，没有姿态信息所以，Y，G，C都需要改变
     // parse measurement:
+    Eigen::Vector3d Delta_p = pose_.block<3,1>(0,3) - T_nb.block<3,1>(0,3);
+    Eigen::Vector3d Delta_v = pose_.block<3,3>(0,0).transpose()*vel_ - v_b;
 
+    YPosiVel_.block<3,1>(0,0)= Delta_p;
+    YPosiVel_.block<3,1>(3,0) = Delta_v;
+
+    Y = YPosiVel_;
     // set measurement equation:
-
+   GPosiVel_.block<3,3>(3, kIndexErrorVel) = pose_.block<3,3>(0,0).transpose();//观测值，Rbw所以要转置（求逆）
+   GPosiVel_.block<3,3>(3, kIndexErrorOri) = Sophus::SO3d::hat(pose_.block<3,3>(0,0).transpose()*vel_);//观测值  v(b) = R(bw)*v(w)
+  G = GPosiVel_;
     // set Kalman gain:
+    MatrixRPosiVel R = GPosiVel_*P_*GPosiVel_.transpose()+RPosiVel_;//C为单位阵
+    K = P_*GPosiVel_.transpose()*R.inverse();
 }
 
 /**
@@ -694,6 +704,7 @@ void ErrorStateKalmanFilter::CorrectErrorEstimation(
     break;
   case MeasurementType::POSI_VEL:
     //
+    CorrectErrorEstimationPosiVel(measurement.T_nb,measurement.v_b,measurement.w_b,Y,G,K);
     // TODO: register new correction logic here:
     //
     break;
