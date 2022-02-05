@@ -100,8 +100,7 @@ evo_ape kitti ground_truth.txt fused.txt -r full --plot --plot_mode xy
 此处将完成作业相关的配置汇总如下. 此处设置GNSS-INS-Sim的仿真频率为`400Hz`.
 
 * **Hyper Params** [here](src/gnss_ins_sim/config/recorder_virtual_proving_ground.yaml#L2)
-  
-    * **motion_file** GNSS-INS-Sim Motion File定义
+  * **motion_file** GNSS-INS-Sim Motion File定义
     
     * **output_name** 产生的rosbag输出路径. 默认值为 /workspace/data/gnss_ins_sim/virtual_proving_ground.bag
 
@@ -176,4 +175,10 @@ rosbag play virtual_proving_ground.bag
 
 1.编译不通过：需要将scan_context_manager中的文件替换为第四章的文件，去掉重名的hpp部分
 
-cpp文件也需要替换，替换后出现坐标不移动的问题。
+cpp文件也需要替换。
+
+2.这里生成的仿真数据的重力加速度和kitti的重力加速度方向不太一致，原因，仿真的数据集中传感器的Z轴正方向是朝上的，所以imu_sim_ins accel_z 读出来的数值是 -g。通过 指令rqt_bag 查看传感器读取的重力加速度，写到yaml中。
+
+gravity_magnitude: -9.794216 
+
+3.gnss_ins_sim_filtering.cpp中缺少了一行

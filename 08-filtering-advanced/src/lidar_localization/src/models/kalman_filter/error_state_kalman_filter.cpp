@@ -673,7 +673,7 @@ void ErrorStateKalmanFilter::CorrectErrorEstimationPosiVel(
     // set measurement equation:
    GPosiVel_.block<3,3>(3, kIndexErrorVel) = pose_.block<3,3>(0,0).transpose();//观测值，Rbw所以要转置（求逆）
    GPosiVel_.block<3,3>(3, kIndexErrorOri) = Sophus::SO3d::hat(pose_.block<3,3>(0,0).transpose()*vel_);//观测值  v(b) = R(bw)*v(w)
-  G = GPosiVel_;
+   G = GPosiVel_;
     // set Kalman gain:
     MatrixRPosiVel R = GPosiVel_*P_*GPosiVel_.transpose()+RPosiVel_;//C为单位阵
     K = P_*GPosiVel_.transpose()*R.inverse();
