@@ -182,3 +182,5 @@ cpp文件也需要替换。
 gravity_magnitude: -9.794216 
 
 3.gnss_ins_sim_filtering.cpp中缺少了一行
+
+4.gps融合编码器的最后还是跑飞了，先暂时一放
