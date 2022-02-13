@@ -228,35 +228,66 @@ void IMUPreIntegrator::UpdateState(void) {
     // TODO: a. update mean:
     //
     // 1. get w_mid:
+    w_mid =0.5*(prev_w + curr_w);
     // 2. update relative orientation, so3:
+    prev_theta_ij = state.theta_ij_;
+    d_theta_ij = Sophus::SO3d::exp(w_mid*T);//so3转化为SO3,不懂exp是为什么？？解答：此处exp函数就是将旋转向量转化为旋转矩阵的形式，李代数的exp并不是一般的指数映射，exp表示罗德里格斯公式，见十四讲
+    //尽管SO3对应于矩阵群，但是SO3在使用cout时是以so3形式输出的，输出的是一个3维向量，只有.matrix()输出的是旋转矩阵。
+    state.theta_ij_ =state.theta_ij_*d_theta_ij_;//答案是：state.theta_ij_*d_theta_ij_;为什么不是d_theta_ij*state.theta_ij_，可能是需要搞清左乘右乘？？
+    //猜测可能是RwiRij,即d_theta_ij_输出的是Rij不是Rji(为什么？？见笔记解释)
+    curr_theta_ij = state.theta_ij_;
     // 3. get a_mid:
+    a_mid = 0.5*(prev_theta_ij*prev_a+curr_theta_ij*curr_a);
     // 4. update relative translation:
+    state.alpha_ij_ +=state.beta_ij_*T+0.5*a_mid*T*T;//v*t+0.5a*t*t
     // 5. update relative velocity:
-
+    state.beta_ij_ += a_mid*T;
     //
     // TODO: b. update covariance:
     //
     // 1. intermediate results:
-
+    dR_inv = d_theta_ij.inverse().matrix();//这里与PPT不同，可能是其他论文的结果
+    prev_R = prev_theta_ij.matrix();
+    curr_R = curr_theta_ij.matrix();
+    prev_R_a_hat = prev_R*Sophus::SO3d::hat(prev_a);
+    curr_R_a_hat = curr_R*Sophus::SO3d::hat(curr_a);
     //
-    // TODO: 2. set up F:
+    // TODO: 2. set up F:f12和f32不懂
     //
     // F12 & F32:
+    F_.block<3,3>(INDEX_ALPHA,INDEX_THETA) = -0.25*T*(prev_R_a_hat+curr_R_a_hat*dR_inv);
+    F_.block<3,3>(INDEX_BETA, INDEX_THETA) = -0.5*(prev_R_a_hat+curr_R_a_hat*dR_inv);
     // F14 & F34:
+    F_.block<3,3>(INDEX_ALPHA,INDEX_B_A) = -0.25*T*(prev_R+curr_R);
+    F_.block<3,3>(INDEX_BETA,INDEX_B_A) = -0.5*T*(prev_R+curr_R);
     // F15 & F35:
+    F_.block<3,3>(INDEX_ALPHA,INDEX_B_G) =0.25*T*T*curr_R_a_hat;
+    F.block<3,3>(INDEX_BETA,INDEX_B_G)=0.5*T*curr_R_a_hat;
     // F22:
-
+    F_.block<3,3>(INDEX_THETA,INDEX_THETA) =  -Sophus::SO3d::hat(w_mid);
     //
     // TODO: 3. set up G:
     //
     // G11 & G31:
+    B_.block<3,3>(INDEX_ALPHA,INDEX_M_ACC_PREV) = 0.25*T*prev_R;
+    B_.block<3,3>(INDEX_BETA,INDEX_M_ACC_PREV) = 0.5*prev_R;
     // G12 & G32:
+    B_.block<3,3>(INDEX_ALPHA,INDEX_M_GYR_PREV) = -0.125*T*T*curr_R_a_hat;
+    B_.block<3,3>(INDEX_BETA,INDEX_M_GYR_PREV)= -0.25*T*curr_R_a_hat;
     // G13 & G33:
+    B_.block<3,3> (INDEX_ALPHA,INDEX_M_ACC_CURR) = 0.25*T*curr_R;
+    B_.block<3,3>(INDEX_BETA,INDEX_M_ACC_CURR) = 0.5*curr_R;
     // G14 & G34:
-
+   B_.block<3,3>(INDEX_ALPHA,INDEX_M_GYR_CURR)= -0.125*T*T*curr_R_a_hat;
+   B_.block<3,3>(INDEX_BETA,INDEX_M_GYR_CURR) = -0.25*T*curr_R_a_hat;
     // TODO: 4. update P_:
+     
+     MatrixF F = MatrixF::Identity()+T*F_;
+     MatrixB B = T*B_;
 
+     P_ = F*P_*F.transpose() + B*Q_*B.transpose();
     // 
+    J_ = F*J_;
     // TODO: 5. update Jacobian:
     //
 }
