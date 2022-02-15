@@ -233,7 +233,7 @@ void IMUPreIntegrator::UpdateState(void) {
     prev_theta_ij = state.theta_ij_;
     d_theta_ij = Sophus::SO3d::exp(w_mid*T);//so3转化为SO3,不懂exp是为什么？？解答：此处exp函数就是将旋转向量转化为旋转矩阵的形式，李代数的exp并不是一般的指数映射，exp表示罗德里格斯公式，见十四讲
     //尽管SO3对应于矩阵群，但是SO3在使用cout时是以so3形式输出的，输出的是一个3维向量，只有.matrix()输出的是旋转矩阵。
-    state.theta_ij_ =state.theta_ij_*d_theta_ij_;//答案是：state.theta_ij_*d_theta_ij_;为什么不是d_theta_ij*state.theta_ij_，可能是需要搞清左乘右乘？？
+    state.theta_ij_ =state.theta_ij_*d_theta_ij;//答案是：state.theta_ij_*d_theta_ij_;为什么不是d_theta_ij*state.theta_ij_，可能是需要搞清左乘右乘？？
     //猜测可能是RwiRij,即d_theta_ij_输出的是Rij不是Rji(为什么？？见笔记解释)
     curr_theta_ij = state.theta_ij_;
     // 3. get a_mid:
@@ -262,7 +262,7 @@ void IMUPreIntegrator::UpdateState(void) {
     F_.block<3,3>(INDEX_BETA,INDEX_B_A) = -0.5*T*(prev_R+curr_R);
     // F15 & F35:
     F_.block<3,3>(INDEX_ALPHA,INDEX_B_G) =0.25*T*T*curr_R_a_hat;
-    F.block<3,3>(INDEX_BETA,INDEX_B_G)=0.5*T*curr_R_a_hat;
+    F_.block<3,3>(INDEX_BETA,INDEX_B_G)=0.5*T*curr_R_a_hat;
     // F22:
     F_.block<3,3>(INDEX_THETA,INDEX_THETA) =  -Sophus::SO3d::hat(w_mid);
     //
