@@ -48,11 +48,12 @@ public:
     // TODO: Update H:
     //
     // a. H_mm:
-
-    //
+    H_.block<15,15>(INDEX_M,INDEX_M) += J_m.transpose()*J_m;
+    //  
     // TODO: Update b:
     //
     // a. b_m:
+    b_.block<15,1>(INDEX_M, 0 ) += J_m.transpose()*residuals;
   }
 
   void SetResRelativePose(
@@ -71,18 +72,23 @@ public:
 
     //
     // TODO: Update H:
-    //
+    //T0:6维 M0：9维 T1：6维 M1：9维
     // a. H_mm:
     // b. H_mr:
     // c. H_rm:
     // d. H_rr:
-
+   H_.block<15,15>(INDEX_M,INDEX_M) +=J_m.transpose()*J_m;
+   H_.block<15,15>(INDEX_M,INDEX_R) +=J_m.transpose()*J_r;
+   H_.block<15,15>(INDEX_R,INDEX_M) += J_r.transpose()*J_m;
+   H_.block<15,15>(INDEX_R,INDEX_R) +=J_r.transpose()*J_r;
 
     //
     // TODO: Update b:
     //
     // a. b_m:
     // a. b_r:
+    b_.block<15,1>(INDEX_M, 0) +=J_m.transpose()*residuals;
+    b_.block<15,1>(INDEX_R, 0 ) +=J_r.transpose()*residuals;
   }
 
   void SetResIMUPreIntegration(
@@ -106,19 +112,56 @@ public:
     // b. H_mr:
     // c. H_rm:
     // d. H_rr:
-
+  H_.block<15,15>(INDEX_M,INDEX_M) +=J_m.transpose()*J_m;
+   H_.block<15,15>(INDEX_M,INDEX_R) +=J_m.transpose()*J_r;
+   H_.block<15,15>(INDEX_R,INDEX_M) += J_r.transpose()*J_m;
+   H_.block<15,15>(INDEX_R,INDEX_R) +=J_r.transpose()*J_r;
 
     //
-    // Update b:
+    // TODO: Update b:
     //
     // a. b_m:
     // a. b_r:
+    b_.block<15,1>(INDEX_M, 0) +=J_m.transpose()*residuals;
+    b_.block<15,1>(INDEX_R, 0 ) +=J_r.transpose()*residuals;
+
+
   }
 
   void Marginalize(
     const double *raw_param_r_0
   ) {
     // TODO: implement marginalization logic
+    Eigen::Map<const Eigen::Matrix<double,15, 1>> x_0(raw_param_r_0);
+    x_0_= x_0;
+
+    //marginalize
+    const Eigen::MatrixXd &H_mm = H_.block<15,15>(INDEX_M,INDEX_M);
+    const Eigen::MatrixXd &H_mr = H_.block<15,15>(INDEX_M,INDEX_R);
+    const Eigen::MatrixXd &H_rm = H_.block<15,15>(INDEX_R,INDEX_M);
+    const Eigen::MatrixXd &H_rr = H_.block<15,15>(INDEX_R,INDEX_R);
+
+    const Eigen::VectorXd &b_m = b_.block<15,1>(INDEX_M,0);
+    const Eigen::VectorXd &b_r = b_.block<15,1>(INDEX_R,0);
+
+    Eigen::MatrixXd H_mm_inv = H_mm.inverse();
+    Eigen::MatrixXd H_marginalized = H_rr - H_rm*H_mm_inv*H_mr;
+    Eigen::MatrixXd b_marginalized = b_r - H_rm*H_mm_inv*b_m;
+
+    //solve linearized residual&Jacobian ,奇异值分解,https://zhuanlan.zhihu.com/p/95836870
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> saes(H_marginalized);
+    Eigen::VectorXd S = Eigen::VectorXd((saes.eigenvalues().array()>1.0e-5).select(saes.eigenvalues().array(),0));//select是三元运算符，前为判断条件，array表示转为数组便于进行元素级的操作
+    Eigen::VectorXd S_inv = Eigen::VectorXd((saes.eigenvalues().array()>1.0e-5).select(saes.eigenvalues().array().inverse(),0));
+
+    Eigen::VectorXd S_sqrt = S.cwiseSqrt();
+    Eigen::VectorXd S_inv_sqrt = S_inv.cwiseSqrt();
+
+    //对角阵矩阵转置为原矩阵，使用分解自伴矩阵的方法(H_marginalized是否确保是自伴矩阵)
+    //asDIagonal:变为对角阵
+    J_ = S_sqrt.asDiagonal()*saes.eigenvectors().transpose();
+    e_ = S_inv_sqrt.asDiagonal()*saes.eigenvectors().transpose()*b_marginalized;
+
+
   }
 
   virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const {	
@@ -131,13 +174,18 @@ public:
     //
     // TODO: compute residual:
     //
-
+    Eigen::Map<Eigen::Matrix<double,15,1>> residual(residuals);
+    residual = e_+J_*dx;
     //
     // TODO: compute jacobian:
     //
     if ( jacobians ) {
       if ( jacobians[0] ) {
         // implement computing:
+        Eigen::Map<Eigen::Matrix<double,15,15,Eigen::RowMajor>> jacobian_marginalization(jacobians[0]);
+        jacobian_marginalization.setZero();
+
+        jacobian_marginalization = J_;
       }
     }
 
