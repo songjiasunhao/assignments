@@ -716,14 +716,12 @@ std::pair<int, float> ScanContextManager::GetLoopClosureMatch(
     {
         match_id = optimal_index; 
 
-        /*
         LOG(INFO) << std::endl
                   << "[Scan Context] Loop-Closure Detected " 
                   << state_.scan_context_.size() - 1 << "<-->" << optimal_index << std::endl 
                   << "\tDistance " << optimal_dist << std::endl 
                   << "\tHeading Change " << yaw_change_in_deg << " deg." << std::endl
                   << std::endl;
-        */
     }
 
     std::pair<int, float> result{match_id, yaw_change_in_rad};

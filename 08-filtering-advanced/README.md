@@ -2,6 +2,20 @@
 
 深蓝学院, 多传感器融合定位与建图, 第8章Filtering Advanced代码框架.
 
+**出现的问题：**
+
+**1.编译不通过：需要将scan_context_manager中的文件替换为第四章的文件，去掉重名的hpp部分**
+
+**cpp文件也需要替换。**
+
+**2.这里生成的仿真数据的重力加速度和kitti的重力加速度方向不太一致，原因，仿真的数据集中传感器的Z轴正方向是朝上的，所以imu_sim_ins accel_z 读出来的数值是 -g。通过 指令rqt_bag 查看传感器读取的重力加速度，写到yaml中。**
+
+**gravity_magnitude: -9.794216** 
+
+**3.gnss_ins_sim_filtering.cpp中缺少了一行**
+
+**4.gps融合编码器的最后还是跑飞了，先暂时一放**
+
 ---
 
 ## Overview
@@ -171,16 +185,4 @@ rosbag play virtual_proving_ground.bag
 
 <img src="doc/images/gnss-ins-sim-demo.png" alt="Demo, GNSS-INS-Sim Estimation" width="100%">
 
-出现的问题：
-
-1.编译不通过：需要将scan_context_manager中的文件替换为第四章的文件，去掉重名的hpp部分
-
-cpp文件也需要替换。
-
-2.这里生成的仿真数据的重力加速度和kitti的重力加速度方向不太一致，原因，仿真的数据集中传感器的Z轴正方向是朝上的，所以imu_sim_ins accel_z 读出来的数值是 -g。通过 指令rqt_bag 查看传感器读取的重力加速度，写到yaml中。
-
-gravity_magnitude: -9.794216 
-
-3.gnss_ins_sim_filtering.cpp中缺少了一行
-
-4.gps融合编码器的最后还是跑飞了，先暂时一放
+****

@@ -2,6 +2,10 @@
 
 深蓝学院, 多传感器融合定位与建图, 第9章Graph Optimization for Mapping代码框架.
 
+#### **注：laser_odom.txt应该是保存的groundtruth的**
+
+#### **另外只有多优化地图几次，才能保存地图**
+
 ---
 
 ## Overview
@@ -97,3 +101,4 @@ rosservice call /save_scan_context
 ### 优秀要求: 在良好的基础上，完成融合编码器时预积分公式的推导(方差递推、残差对状态量雅可比、bias更新等)
 
 如果理论知识有较大欠缺, 推荐参考深蓝学院VIO课程中的相关内容
+

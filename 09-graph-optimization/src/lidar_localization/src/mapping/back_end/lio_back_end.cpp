@@ -420,7 +420,7 @@ bool LIOBackEnd::SaveOptimizedPose() {
     // write GNSS/IMU pose and lidar odometry estimation as trajectory for evo evaluation:
     for (size_t i = 0; i < optimized_key_frames_.size(); ++i) {
         // a. ground truth, IMU/GNSS:
-        current_pose = key_frames_deque_.at(i).pose;
+        current_pose = key_frames_deque_.at(i).pose;//关键帧之间的位置应该是lidar_odom的弄反了
         current_pose(2, 3) = 0.0f;
         SavePose(ground_truth_ofs_, current_pose);
         // b. lidar odometry:

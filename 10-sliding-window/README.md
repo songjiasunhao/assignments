@@ -1,5 +1,9 @@
 # Multi-Sensor Fusion for Localization & Mapping: Sliding Window -- 多传感器融合定位与建图: 基于图优化的定位方法
 
+#### 问题：1.lidar_localization/src/models/scan_context_manager和slam_data中的scan_context,需要正确生成，负责会造成位姿偏移，以及位姿不按地图乱跑。
+
+#### 2.无法显示绿色轨迹，执行命令后无法产生轨迹
+
 深蓝学院, 多传感器融合定位与建图, 第10章Graph Optimization for Localization through Sliding Window代码框架.
 
 ---
@@ -105,3 +109,6 @@ rosservice call /save_odometry
 ### 优秀要求: 由于基于滑窗的方法中，窗口长度对最终的性能有很大影响，请在良好的基础上，提供不同窗口长度下的融合结果，并对效果及原因做对比分析
 
 如果理论知识有较大欠缺, 推荐参考深蓝学院VIO课程中的相关内容
+
+
+
